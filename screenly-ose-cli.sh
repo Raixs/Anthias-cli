@@ -76,7 +76,7 @@ function check_force {
 
 # Función para comprobar que el servidor está activo
 function check_server() {
-    if curl -s --head  --request GET $server | grep "200 OK" > /dev/null; then
+    if curl -s --head  --request GET "$server" | grep "200 OK" > /dev/null; then
         echo -e "${GREEN}Servidor activo${ENDCOLOR}"
     else
         echo -e "${RED}Servidor inactivo${ENDCOLOR}"
@@ -116,7 +116,7 @@ function check_delete() {
 function delete_assets() {
     list_assets
     echo -e "${BLUE}Introduce el ID del asset a eliminar:${ENDCOLOR}"
-    read id
+    read -r id
     # Pedir confirmación para eliminar el asset
     echo -e "${BLUE}¿Estás seguro de que quieres eliminar el asset con ID ${id}?${ENDCOLOR}"
     read -p "y/n: " -n 1 -r
@@ -131,9 +131,9 @@ function delete_assets() {
 
 # Función para crear backup
 function create_backup() {
-    curl -X POST "${server}/api/v1.2/backup" -H "accept: application/json" -u "${user}:${pass}"
-    # Comprobar si ha sido creado correctamente
-    if [ $0 == '{"error": "list indices must be integers, not str"}' ]; then
+    response=$(curl -X POST "${server}/api/v1.2/backup" -H "accept: application/json" -u "${user}:${pass}")
+    # Comprobar si ha sido creado correctamente, comprobando si $response contiene "error"
+    if [ "$response" == '{"error": "list indices must be integers, not str"}' ]; then
         echo -e "${GREEN}Backup creado correctamente${ENDCOLOR}"
     else
         echo -e "${RED}Error al crear el backup${ENDCOLOR}"
@@ -175,13 +175,13 @@ function delete_all_assets() {
 function rename_asset() {
     list_assets
     echo -e "${BLUE}Introduce el ID del asset a renombrar:${ENDCOLOR}"
-    read id
+    read -r id
     echo -e "${BLUE}Introduce el nuevo nombre:${ENDCOLOR}"
-    read name
+    read -r name
     # Obtener todos los datos del asset en json
     json=$(curl -s -X GET "${server}/api/v1.2/assets/${id}" -H "accept: application/json" -u "${user}:${pass}")
     # Modificar el nombre del asset
-    json=$(echo $json | jq --arg jqname "$name" '.name = $jqname')
+    json=$(echo "$json" | jq --arg jqname "$name" '.name = $jqname')
     # Enviar los datos modificados al servidor
     response=$(curl -s -X PUT "${server}/api/v1.2/assets/${id}" -H "accept: application/json" -H "Content-Type: application/json" -u "${user}:${pass}" -d "$json" | jq)
     # Comprobar si el asset renombrado existe, listando los assets y filtrando por el ID y el nombre introducido
@@ -196,13 +196,13 @@ function rename_asset() {
 function change_state() {
     list_assets
     echo -e "${BLUE}Introduce el ID del asset a cambiar:${ENDCOLOR}"
-    read id
+    read -r id
     echo -e "${BLUE}Introduce el nuevo estado (0/1):${ENDCOLOR}"
-    read state
+    read -r state
     # Obtener todos los datos del asset en json
     json=$(curl -s -X GET "${server}/api/v1.2/assets/${id}" -H "accept: application/json" -u "${user}:${pass}")
     # Modificar el estado del asset
-    json=$(echo $json | jq --arg state "$state" '.is_enabled = $state')
+    json=$(echo "$json" | jq --arg state "$state" '.is_enabled = $state')
     # Enviar los datos modificados al servidor
     curl -s -X PUT "${server}/api/v1.2/assets/${id}" -H "accept: application/json" -H "Content-Type: application/json" -u "${user}:${pass}" -d "$json"
     # Tiempo para que el servidor actualice los datos

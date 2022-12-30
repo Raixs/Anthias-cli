@@ -10,10 +10,11 @@ set -o pipefail  # don't hide errors within pipes
 # set -o xtrace  # track what is running - debugging
 
 #Colors
-RED="\e[31m"
-BLUE="\e[34m"
-GREEN="\e[32m"
-ENDCOLOR="\e[0m"
+color="false"
+RED=""
+BLUE=""
+GREEN=""
+ENDCOLOR=""
 
 #Variables
 option=${1:-}
@@ -39,7 +40,7 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- get root path of the script
 
 
 # Recuperar parámetros
-while getopts ":u:p:s:a:f" opt; do
+while getopts ":u:p:s:a:f:c" opt; do
   case $opt in
     u) user="$OPTARG"
     ;;
@@ -50,6 +51,8 @@ while getopts ":u:p:s:a:f" opt; do
     a) action="$OPTARG"
     ;;
     f) force="true"
+    ;;
+    c) color="true"
     ;;
     \?) echo -e "${RED}Opción inválida: -$OPTARG${ENDCOLOR}" >&2
     ;;
@@ -215,6 +218,13 @@ function change_state() {
     fi
 }
 
+# Si color=true, mostrar los colores
+if [ "$color" = true ]; then
+    GREEN='\033[0;32m'
+    RED='\033[0;31m'
+    BLUE='\033[0;34m'
+    ENDCOLOR='\033[0m'
+fi
 
 # Ejecutar función list_assets si se especifica la opción -a list
 if [ "$action" = "list" ]; then
